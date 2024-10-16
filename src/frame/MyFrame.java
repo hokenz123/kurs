@@ -46,11 +46,11 @@ implements MouseListener, Runnable
         Rectangle box = g.getClipRect();
 
         // create the offscreen buffer and associated Graphics
-        offscreen = createImage(box.width, box.height);
+        offscreen = createImage(1280, 720);
         offgc = offscreen.getGraphics();
         // clear the exposed area
         offgc.setColor(getBackground());
-        offgc.fillRect(0, 0, box.width, box.height);
+        offgc.fillRect(0, 0, 1280, 720);
         offgc.setColor(getForeground());
         // do normal redraw
         offgc.translate(-box.x, -box.y);
@@ -91,7 +91,7 @@ implements MouseListener, Runnable
         blocks = new Block[m*n];
         for (int i = 0; i<m; i++){
             for (int j = 0; j<n; j++){
-                blocks[n*i+j] = new Block(i+1, j, 30);
+                blocks[n*i+j] = new Block(i+1, j+1, 30);
             }
         }
         balls = new Ball[1];
@@ -122,7 +122,7 @@ implements MouseListener, Runnable
                 continue;
             balls[0].move();
             repaint();
-            try { Thread.sleep(5); }
+            try { Thread.sleep(4); }
             catch (InterruptedException e){}
 //            repaint(balls[0].getX()-5, balls[0].getY()-5, Ball.R+10, Ball.R+10);
 

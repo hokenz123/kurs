@@ -24,36 +24,60 @@ public class Ball extends Entity {
         if (angle == 0) return;
         for (Block b : frame.MyFrame.blocks) {
             if (this.isColliding(b)) {
-                if (angle < Math.PI / 2) {
-                    angle = (Math.PI - 2 * angle)-Math.PI;
-                }
+                boolean leftCollision = b.getX()+Block.side >= x && b.getX() <= x;
+                boolean rightCollision = b.getX() <= x+Ball.R && b.getX()+Block.side >= x+Ball.R;
+                if (leftCollision || rightCollision)
+                    angle = -angle;
+                 else
+                    angle = -angle+Math.PI;
                 break;
             }
         }
         this.x += dist * Math.cos(angle);
         this.y += dist * Math.sin(angle);
-        if (this.y < 0){
-            this.y += 50;
-            angle += Math.PI/2;
-        }
-
-        if (this.x > bounds[1]){
-            this.x -= 50;
-            if (angle < 0){
-                angle += Math.PI/2;
-            } else {
-                angle -= Math.PI/2;
-            }
+//        if (this.y < bounds[2]){
+////            if (Math.tan(angle) > 0){
+////                angle = Math.PI+angle;
+////            } else {
+////                angle += Math.PI;
+////            }
+//            angle = -angle;
+//        }
+//
+//        if (this.x > bounds[1]){
+//            this.x -= 50;
+//            if (angle < 0){
+//                angle += Math.PI/2;
+//            } else {
+//                angle -= Math.PI/2;
+//            }
+//            return;
+//        }
+//
+//
+//        if (this.x < bounds[0] || this.y > bounds[3]){
+////            isMoving = false;
+//            if (angle < 0){
+//                angle += Math.PI/2;
+//            } else {
+//                angle -= Math.PI/2;
+//            }
+//        }
+        if (x < 0){
+            x = Ball.R;
+            angle = -angle+Math.PI;
             return;
         }
-
-        if (this.x < bounds[0] || this.y > bounds[3] || this.y < bounds[2]){
-//            isMoving = false;
-            if (angle < 0){
-                angle += Math.PI/2;
-            } else {
-                angle -= Math.PI/2;
-            }
+        if (y < 50){
+            y = 50+Ball.R;
+            angle = -angle;
+            return;
+        }
+        if (this.y >= bounds[3]){
+            angle = -angle;
+        }
+        if (this.x >= bounds[1]){
+            angle = -angle+Math.PI;
         }
     }
 
