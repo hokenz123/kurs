@@ -3,10 +3,9 @@ import java.awt.*;
 
 public class Block extends Entity {
     int nx, ny;                                         // Нормализованные координаты
-    public final static int side = 50;                  // Длина стороны
+    public final static int side = 40;                  // Длина стороны
     private int health;                                 // Здоровье блока
     private boolean killed = false;                     // Флаг убит ли блок
-    private boolean rePaint = false;
 
     private Color getColor(){
         if (health <= 10) return Color.red;
@@ -31,8 +30,6 @@ public class Block extends Entity {
         this.health = health;
     }
     public void damage(int value){
-        rePaint = true;
-
         if (health-value > 0) {
             health -= value;
             return;
@@ -47,14 +44,6 @@ public class Block extends Entity {
         }
     }
 
-    public void noRePaint(){
-        rePaint = false;
-    }
-
-    public boolean isRePaint(){
-        return rePaint;
-    }
-
     public int getNX(){
         return nx;
     }
@@ -65,5 +54,9 @@ public class Block extends Entity {
 
     public boolean isKilled(){
         return killed;
+    }
+
+    public void kill(){
+        killed = true;
     }
 }

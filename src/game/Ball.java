@@ -8,11 +8,22 @@ public class Ball extends Entity {
     public final static int R = 10;
     private final int dist = 3;
     private boolean isMoving = false;
-    public static int[] bounds = {0, 1200, 50, 600};
+
+    public static int[] bounds = {
+            0,                          // Граница по х слева
+            1200,                       // Граница по х справа
+            50,                         // Граница по у сверху
+            600                         // Граница по у снизу
+    };
+    public static void changeBounds(int[] bounds){
+        if (bounds.length != 4) return;
+        Ball.bounds = bounds;
+    }
 
     public Ball(){
-        x = 1000;
-        y = 600;
+        // Координаты стартовой позиции
+        x = bounds[1]/2;
+        y = bounds[3];
     }
 
     public void draw(Graphics g){
@@ -24,45 +35,19 @@ public class Ball extends Entity {
         if (angle == 0) return;
         for (Block b : frame.MyFrame.blocks) {
             if (this.isColliding(b)) {
-                boolean leftCollision = b.getX()+Block.side >= x && b.getX() <= x;
-                boolean rightCollision = b.getX() <= x+Ball.R && b.getX()+Block.side >= x+Ball.R;
+                boolean leftCollision = ((x-dist*Math.cos(angle)) <= b.getX()) && (y <= b.getY()+Block.side && y >= b.getY());
+                boolean rightCollision = (x-dist*Math.cos(angle)) >= b.getX()+Block.side && (y <= b.getY()+Block.side && y >= b.getY());
                 if (leftCollision || rightCollision)
-                    angle = -angle;
-                 else
                     angle = -angle+Math.PI;
+                else
+                    angle = -angle;
                 break;
             }
         }
+        int xBef = x;
+        int yBef = y;
         this.x += dist * Math.cos(angle);
         this.y += dist * Math.sin(angle);
-//        if (this.y < bounds[2]){
-////            if (Math.tan(angle) > 0){
-////                angle = Math.PI+angle;
-////            } else {
-////                angle += Math.PI;
-////            }
-//            angle = -angle;
-//        }
-//
-//        if (this.x > bounds[1]){
-//            this.x -= 50;
-//            if (angle < 0){
-//                angle += Math.PI/2;
-//            } else {
-//                angle -= Math.PI/2;
-//            }
-//            return;
-//        }
-//
-//
-//        if (this.x < bounds[0] || this.y > bounds[3]){
-////            isMoving = false;
-//            if (angle < 0){
-//                angle += Math.PI/2;
-//            } else {
-//                angle -= Math.PI/2;
-//            }
-//        }
         if (x < 0){
             x = Ball.R;
             angle = -angle+Math.PI;
@@ -74,13 +59,21 @@ public class Ball extends Entity {
             return;
         }
         if (this.y >= bounds[3]){
-            angle = -angle;
+            isMoving = false;
+            x = bounds[1]/2;
+            y = bounds[3];
         }
         if (this.x >= bounds[1]){
             angle = -angle+Math.PI;
         }
+        if (x == xBef || y == yBef) angle += Math.PI/2;
     }
 
+    public void move(int k){
+        for (int i = 0; i < k; i++){
+            move();
+        }
+    }
     public void move(int x, int y){
         angle = Math.atan(((double)y-(double)this.y)/((double)x-(double)this.x));
 
@@ -103,7 +96,7 @@ public class Ball extends Entity {
         boolean yCollide = sq1Bottom >= y && sq1Top <= (y+ R);
 
         if (xCollide && yCollide && !block.isKilled()){
-            block.damage(7);
+            block.damage(1);
             return true;
         }
         return false;
