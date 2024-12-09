@@ -1,28 +1,35 @@
 package frame;
 
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 import game.*;
 
 public class MyFrame
 extends Frame
-implements MouseListener, Runnable
+implements MouseListener, KeyListener, Runnable
 {
+    int windowWidth;
+    int windowHeight;
     public static Block[] blocks;
     public static Ball[] balls;
+    public static int[] firstBallCoords = new int[2];
+    public static PowerUp[] powerUps;
+    public static int ballCount = 1000;
     Thread animator;
     static int last_x = -1;
     static int last_y = -1;
     public MyFrame(int width, int height)
     {
+        windowWidth = width;
+        windowHeight = height;
         setVisible(true);
         setSize(width, height);
         int[] newBounds = {0, width-50, 50, height-50};
         Ball.changeBounds(newBounds);
+
+        init();
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e)
@@ -32,7 +39,7 @@ implements MouseListener, Runnable
         });
     }
 
-    public void update(Graphics g){
+    public void update(Graphics g){                 // Двойная буферизация
         Graphics offgc;
         Image offscreen;
         Rectangle box = g.getClipRect();
@@ -52,25 +59,33 @@ implements MouseListener, Runnable
         offscreen.flush();
     }
 
-    public void paint(Graphics g)
-    {
-//        System.out.println("painting...");
-        drawing(g);
-//        g.dispose();
-//        bufferStrategy.show();
+    public void paint(Graphics g) {
+        Block.drawAll(blocks, g);
+        if(balls == null) return;
+        for(Ball ball : balls){
+            if (ball.getY() <= 675)
+                ball.draw(g);
+        }
+        if(powerUps == null) return;
+        for(int i = 0; i < powerUps.length; ++i){
+            if (!powerUps[i].isUsed())
+                powerUps[i].draw(g);
+        }
+
+//        g.setColor(Color.black);
+//        g.drawLine((1280-50)/2, 720-50, last_x, last_y);
     }
 
     public void init(){
         this.addMouseListener(this);
+        this.addKeyListener(this);
     }
 
-    public static void main(String[] args)
+    public static void main()
     {
-        final int width = 1920;
+        final int width = 1280;
         final int height = 720;
         MyFrame f = new MyFrame(width, height);
-
-        f.init();
 
         Graphics g = f.getGraphics();
 
@@ -80,28 +95,27 @@ implements MouseListener, Runnable
         catch (Exception e) {
         }
 
-        int m = 37;
+        int m = 29;
         int n = 10;
         blocks = new Block[m*n];
         for (int i = 0; i<m; i++){
             for (int j = 0; j<n; j++){
-                blocks[n*i+j] = new Block(i+1, j+1, 30);
-                if (i%2 == 0) blocks[n*i+j].kill();
+                blocks[n*i+j] = new Block(i+1, j+1, 100);
+//                if (i%2 == 0) blocks[n*i+j].kill();
             }
         }
-        balls = new Ball[5];
+
+        powerUps = new PowerUp[10];
+        for (int i = 0; i < 10; ++i){
+            powerUps[i] = new DoubleDamage((i+1)*Block.side, 50);
+        }
+
+        balls = new Ball[ballCount];
         for (int i = 0; i < balls.length; i++){
             balls[i] = new Ball();
         }
         f.start();
-        drawing(g);
-    }
-    private static void drawing(Graphics g){
-        Block.drawAll(blocks, g);
-        if(balls == null) return;
-        for (Ball ball : balls){
-            ball.draw(g);
-        }
+        f.paint(g);
     }
 
     public void start(){
@@ -110,7 +124,6 @@ implements MouseListener, Runnable
     }
 
     public void run(){
-        int i = 0;
         while(true){
             boolean moves = false;
             for (Ball ball : balls){
@@ -122,42 +135,48 @@ implements MouseListener, Runnable
             if (!moves){
                 try { Thread.sleep(200); }
                 catch (InterruptedException e){}
-                i = 0;
                 continue;
             }
-            if (balls[0].getAngle() == 0)
-                continue;
-            if (i <= balls.length)
-                for (int k = 0; k < i; k++){
-//                    balls[k].move(5);
-                }
-            else
-                for(Ball ball : balls)
-                    if(ball.isMoving())
-                        ball.move();
+
+            for (Ball ball : balls){
+                if (!ball.isMoving()) continue;
+
+                ball.move();
+
+                for (PowerUp p : powerUps)
+                    ball.isCollidingWidth((Entity) p);
+                for (Block b : blocks)
+                    ball.isCollidingWidth(b);
+            }
+
+            last_x = MouseInfo.getPointerInfo().getLocation().x;
+            last_y = MouseInfo.getPointerInfo().getLocation().y;
             repaint();
-            try { Thread.sleep(3); }
+            try { Thread.sleep(1); }
             catch (InterruptedException e){}
-            i++;
         }
     }
 
     public void mousePressed(MouseEvent e){
-        int x = e.getX()/Block.side;
-        int y = (e.getY()-50)/Block.side;
-//        for (Block value : blocks) {
-//            if (value.getNX() == x && value.getNY() == y) {
-//                value.damage(5);
-//                break;
-//            }
-//        }
         last_x = e.getX();
         last_y = e.getY();
-        for (Ball ball : balls){
-            ball.move(last_x, last_y);
+
+        for (int i = 0; i < ballCount; ++i){
+            balls[i].move(last_x, last_y);
+            balls[i].reverseMove(i);
         }
     }
 
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            for (Ball ball : balls) {
+                ball.setPos(610, 665);
+            }
+        }
+    }
+
+    public void keyPressed(KeyEvent e){}
+    public void keyTyped(KeyEvent e) {}
     public void mouseReleased(MouseEvent e) {}
     public void mouseClicked(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}

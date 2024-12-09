@@ -1,5 +1,6 @@
 package game;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 public class Block extends Entity {
     int nx, ny;                                         // Нормализованные координаты
@@ -8,26 +9,30 @@ public class Block extends Entity {
     private boolean killed = false;                     // Флаг убит ли блок
 
     private Color getColor(){
-        if (health <= 10) return Color.red;
-        if (health <= 20) return Color.yellow;
-        if (health <= 30) return Color.green;
-        return Color.magenta;
+        if (health <= 10) return new Color(219, 216, 240);
+        if (health <= 20) return new Color(255, 238, 136);
+        if (health <= 30) return new Color(237, 106, 94);
+        if (health <= 40) return new Color(62, 146, 204);
+        return new Color(132, 169, 192);
     }
     public void draw(Graphics g){
         if (!killed){
-            g.setColor(this.getColor());
-            g.fillRect(x, y, side, side);
-            g.setColor(Color.black);
-            g.drawRect(x, y, side, side);
-            g.drawString(health+"", x+(side/2-(health+"").length()*5+5), y+side/2+5);
+            Rectangle2D.Double rect = new Rectangle2D.Double(x, y, side, side);
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setColor(this.getColor());
+            g2d.fill(rect);
+            g2d.setColor(Color.black);
+            g2d.draw(rect);
+            g2d.drawString(health+"", (int)( x+(side/2-(health+"").length()*5+5)), (int)(y+side/2+5)); // Нарисовать текст по середине блока
         }
     }
     public Block(int nx, int ny, int health){
-        super(nx*side, ny*side);
+        super(nx*side, ny*side, side, side);
         this.nx = nx;
         this.ny = ny;
         y+=50;                  // Учет заголовка окна
         this.health = health;
+        type = "Block";
     }
     public void damage(int value){
         if (health-value > 0) {
@@ -59,4 +64,6 @@ public class Block extends Entity {
     public void kill(){
         killed = true;
     }
+
+    void whenCollides(Entity b) {}
 }
